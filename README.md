@@ -25,6 +25,7 @@ mkdir Tables
 mkdir Tables/IrradianceData
 mkdir Tables/IrradianceData_isInBC
 mkdir Tables/LoadData
+mkdir Tables/ContourData
 ~~~~
   
 If there isn't enough free space, it can be created on another disk and linked from the top-level directory of the git repo:
