@@ -23,7 +23,7 @@ with open(".PWD") as f:
   repo_path = f.readline()
 
 # Open the .shp file and select the BC data
-fp = "ContourData/gadm36_CAN_1.shp"
+fp = "%s/Tables/ContourData/gadm36_CAN_1.shp"%repo_path
 data_can_broadcast = gpd.read_file(fp)
 data_can=sc.broadcast(data_can_broadcast)
 
