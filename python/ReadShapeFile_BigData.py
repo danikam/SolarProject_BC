@@ -40,7 +40,7 @@ def isInBC(flnm_cntnt):
 def CopyIrFile(filename):
   lat = float(filename[12:17])
   long = float(filename[18:25])
-  copyfile("%s/Tables/IrradianceData_BC/%s"%(repo_path, filename), "%s/Tables/IrradianceData_isInBC/%.2f_%.2f.csv"%(repo_path, lat, long))
+  copyfile("%s/Tables/IrradianceData/%s"%(repo_path, filename), "%s/Tables/IrradianceData_isInBC/%.2f_%.2f.csv"%(repo_path, lat, long))
   return 1
 
 start_time=time.time()
