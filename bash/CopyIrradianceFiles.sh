@@ -10,5 +10,5 @@ cd ../Tables/IrradianceData
 for longitude in {114..129}
 do
   wget ftp://ftp.nrcan.gc.ca/energy/SOLAR/WesternCanada_2002-2008/TimeSeriesByLatLon/*$longitude*.zip
-  unzip '*$longitude*.zip'
+  unzip "*${longitude}*.zip"
 done
