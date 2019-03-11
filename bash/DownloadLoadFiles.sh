@@ -11,7 +11,7 @@ cd ${repo_dir}/Tables/LoadData
 
 
 # Loop through each year, downloading the load data, converting it to csv format, and updating the header
-for year in {2002..2002}
+for year in {2002..2008}
 do
   # Remove the xls and csv files if they already exist
   rm BalancingAuthorityLoad${year}.xls BalancingAuthorityLoad${year}.csv
