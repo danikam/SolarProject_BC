@@ -24,6 +24,7 @@ cd ..
 mkdir Tables
 mkdir Tables/IrradianceData
 mkdir Tables/IrradianceData_isInBC
+mkdir Tables/LoadData
 ~~~~
   
 If there isn't enough free space, it can be created on another disk and linked from the top-level directory of the git repo:
@@ -42,14 +43,18 @@ ln -s /mntc/Tables Tables
 bash/MakePwdFiles.sh
 ~~~~
   
-4. Run CopyIrradianceFiles.sh to copy and unzip the zipped irradiance files from ftp://ftp.nrcan.gc.ca with longitudes ranging to the furthest east extent of BC to the Tables/IrradianceData directory:
+4. Run DownloadIrradianceFiles.sh to copy and unzip the zipped irradiance files from ftp://ftp.nrcan.gc.ca with longitudes ranging to the furthest east extent of BC to the Tables/IrradianceData directory:
   
 ~~~~
-bash/CopyIrradianceFiles.sh
+bash/DownloadIrradianceFiles.sh
 ~~~~
 
 This should take ~30 minutes or so, depending on the internet speed.
   
-5. 
+5. Download the load data from 2002 to 2008 from the BC hydro website:
+
+~~~~
+bash/DownloadLoadFiles.sh
+~~~~
   
-  
+
