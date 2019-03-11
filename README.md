@@ -57,4 +57,9 @@ This should take ~30 minutes or so, depending on the internet speed.
 bash/DownloadLoadFiles.sh
 ~~~~
   
+6. Download and unzip the .shp file containing contour data for Canadian provincial borders:
+
+~~~~
+bash/DownloadContourData.sh
+~~~~
 
