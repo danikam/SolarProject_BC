@@ -15,13 +15,17 @@ import glob
 sc=SparkContext()
 sql=SQLContext(sc)
 
+# Get the path to the top level of the repo
+with open(".PWD") as f:
+  repo_path = f.readline()
+
 # Function to make a triplet (lat, long, line) for each line in a given file
 # The latitude and longitude are parsed from the filename f
 def proc(f):
   return sc.textFile(f).map(lambda x: (float((f.split("/")[-1])[0:5]), float((f.split("/")[-1])[6:13]), x))
 
 # Create an RDD from the union of triplets obtained from each irradiance file
-irr_RDD = sc.union([proc(f) for f in glob.glob("/Users/danikamacdonell/Courses/Phys511A/SolarProject/Tables/IrradianceData_isInBC/*.csv")])
+irr_RDD = sc.union([proc(f) for f in glob.glob("%s/Tables/IrradianceData_isInBC/*.csv"%repo_path)])
 
 # Convert each time in a line to a year and timestamp
 

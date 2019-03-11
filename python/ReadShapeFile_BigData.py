@@ -18,6 +18,10 @@ import os
 sc=SparkContext()
 sql=SQLContext(sc)
 
+# Get the path to the top level of the repo
+with open(".PWD") as f:
+  repo_path = f.readline()
+
 # Open the .shp file and select the BC data
 fp = "ContourData/gadm36_CAN_1.shp"
 data_can_broadcast = gpd.read_file(fp)
@@ -36,13 +40,13 @@ def isInBC(flnm_cntnt):
 def CopyIrFile(filename):
   lat = float(filename[12:17])
   long = float(filename[18:25])
-  copyfile("/Users/danikamacdonell/Courses/Phys511A/SolarProject/Tables/IrradianceData_BC/%s"%filename, "/Users/danikamacdonell/Courses/Phys511A/SolarProject/Tables/IrradianceData_isInBC/%.2f_%.2f.csv"%(lat, long))
+  copyfile("%s/Tables/IrradianceData_BC/%s"%(repo_path, filename), "%s/Tables/IrradianceData_isInBC/%.2f_%.2f.csv"%(repo_path, lat, long))
   return 1
 
 start_time=time.time()
 
 # Collect the filenames for the coordinates within BC
-flnms_RDD=sc.textFile('file:///Users/danikamacdonell/Courses/Phys511A/SolarProject/Tables/list.txt').repartition(4).filter(isInBC).cache()
+flnms_RDD=sc.textFile("file://%s/Tables/list.txt"%repo_path).repartition(4).filter(isInBC).cache()
 #print(flnms_RDD.take(1))
 
 # Copy each file whose coordinates lie within BC to a dedicated directory
