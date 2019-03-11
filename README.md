@@ -41,3 +41,15 @@
   ~~~~
   bash/MakePwdFiles.sh
   ~~~~
+  
+  4. Run CopyIrradianceFiles.sh to copy and unzip the zipped irradiance files from ftp://ftp.nrcan.gc.ca with longitudes ranging to the furthest east extent of BC to the Tables/IrradianceData directory:
+  
+  ~~~~
+  bash/CopyIrradianceFiles.sh
+  ~~~~
+
+  This should take ~30 minutes or so, depending on the internet speed.
+  
+  5. 
+  
+  
