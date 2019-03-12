@@ -33,6 +33,8 @@ If there isn't enough free space, it can be created on another disk and linked f
 mkdir /mntc/Tables
 mkdir /mntc/Tables/IrradianceData
 mkdir /mntc/Tables/IrradianceData_isInBC
+mkdir Tables/LoadData
+mkdir Tables/ContourData
 ln -s /mntc/Tables Tables
 ~~~~
   
