@@ -36,7 +36,9 @@ mkdir /mntc/Tables/IrradianceData_isInBC
 ln -s /mntc/Tables Tables
 ~~~~
   
-3. From the top-level directory of the git repo (SolarProject_BC), run the bash script MakePwdFiles.sh to make ".PWD" files in each directory and sub-directory of the repo, which will make it possible to run the code from anywhere in the repo.
+3. From the top-level directory of the git repo (SolarProject_BC), run the bash script MakePwdFiles.sh to make ".PWD" files in each directory and sub-directory of the repo, which will make it possible to run the code from anywhere in the repo. 
+
+**NOTE: This is the only script that MUST be run from the top-level directory of the repo.
   
 ~~~~
 bash/MakePwdFiles.sh
@@ -55,12 +57,16 @@ This should take ~30 minutes or so, depending on the internet speed.
 ~~~~
 bash/DownloadLoadFiles.sh
 ~~~~
+
+This should take less than a minute. 
   
 6. Download and unzip the .shp file containing contour data for Canadian provincial borders:
 
 ~~~~
 bash/DownloadContourData.sh
 ~~~~
+
+This should also take less than a minute.
 
 
 ## Copy irradiance files with BC coordinates to HDFS
@@ -71,4 +77,10 @@ bash/DownloadContourData.sh
 bash/MakeListOfIrradianceFiles.sh
 ~~~~
 
-2. 
+2. Run the python script ReadShapeFile.py to copy the solar irradiance files with coordinates lying within BC into HDFS:
+
+~~~~
+python/ReadShapeFile.py
+~~~~
+
+3. 
