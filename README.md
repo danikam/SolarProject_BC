@@ -1,23 +1,21 @@
 # SolarProject_BC
 
 ## Requirements
-  * python3 with pip
+  * python3 with pip3
   * pyspark
   * gnumeric (for ubuntu: sudo apt-get install -y gnumeric)
    
    
-## Install Python Modules and Download Data
+## Install python modules and download data
   
 1. Install the required python modules as follows:
   
 ~~~~
 cd python
-pip install -r Requirements.txt
+sudo pip3 install -r Requirements.txt
 cd ..
 ~~~~
-  
-(may need to use pip3 if pip isn't connected to your python3 installation).
-  
+    
 2. Create the Tables directory and sub-directories. If there's enough free space (~30 GB) in the root disk, it can be created directly in the top-level directory of the git repo:
   
 ~~~~
@@ -64,3 +62,13 @@ bash/DownloadLoadFiles.sh
 bash/DownloadContourData.sh
 ~~~~
 
+
+## Copy irradiance files with BC coordinates to HDFS
+
+1. Make a list of filenames for the downloaded irradiance files, from which the geographical longitude and latitude of the data can be parsed:
+
+~~~~
+bash/MakeListOfIrradianceFiles.sh
+~~~~
+
+2. 
