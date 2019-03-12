@@ -6,13 +6,13 @@
   * gnumeric (for ubuntu: sudo apt-get install -y gnumeric)
    
    
-## Install Python Modules and Download Data
+## Install python modules and download data
   
 1. Install the required python modules as follows:
   
 ~~~~
 cd python
-pip3 install -r Requirements.txt
+sudo pip3 install -r Requirements.txt
 cd ..
 ~~~~
     
@@ -62,3 +62,13 @@ bash/DownloadLoadFiles.sh
 bash/DownloadContourData.sh
 ~~~~
 
+
+## Copy irradiance files with BC coordinates to HDFS
+
+1. Make a list of filenames for the downloaded irradiance files, from which the geographical longitude and latitude of the data can be parsed:
+
+~~~~
+bash/MakeListOfIrradianceFiles.sh
+~~~~
+
+2. 
