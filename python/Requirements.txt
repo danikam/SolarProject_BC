@@ -3,7 +3,10 @@ numpy
 geopandas
 matplotlib
 shapely
-time
-shutil
-os
-glob
+shapely[vectorized]
+pyspark
+findspark
+#time
+#shutil
+#os
+#glob
