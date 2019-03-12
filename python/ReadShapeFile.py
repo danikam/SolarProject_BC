@@ -14,6 +14,7 @@ shapely.speedups.enable()   # Enable speedups of shapely procedures
 import time
 from shutil import copyfile
 import os
+import subprocess
 
 sc=SparkContext()
 sql=SQLContext(sc)
@@ -35,12 +36,17 @@ def isInBC(flnm_cntnt):
   return data_can.value.loc[1, 'geometry'].contains(Point(long,lat))
 
 # Function to copy the input file to a directory Tables/IrradianceData_isInBC
-# This is temporary, because the hdfs isn't set up properly on the mac
-# Long-term, things should be written to HDFS
 def CopyIrFile(filename):
   lat = float(filename[12:17])
   long = float(filename[18:25])
   copyfile("%s/Tables/IrradianceData/%s"%(repo_path, filename), "%s/Tables/IrradianceData_isInBC/%.2f_%.2f.csv"%(repo_path, lat, long))
+  return 1
+
+# Function to save the input file to HDFS
+def SaveIrFile2HDFS(filename):
+  lat = float(filename[12:17])
+  long = float(filename[18:25])
+  subprocess.call(["hdfs", "dfs", "-copyFromLocal", "%s/Tables/IrradianceData/%s"%(repo_path, filename), "/user/ubuntu/IrradianceData_isInBC/%.2f_%.2f.csv"(repo_path, lat, long)])
   return 1
 
 start_time=time.time()
@@ -50,7 +56,10 @@ flnms_RDD=sc.textFile("file://%s/Tables/list.txt"%repo_path).repartition(4).filt
 #print(flnms_RDD.take(1))
 
 # Copy each file whose coordinates lie within BC to a dedicated directory
-flnms_RDD.foreach(CopyIrFile)
+#flnms_RDD.foreach(CopyIrFile)
+
+# Save each file whose coordinates lie within BC to HDFS
+flnms_RDD.foreach(SaveIrFile2HDFS)
 
 # Collect the coordinates within BC (lat, long)
 #coords_RDD=flnms_RDD.map(lambda x: (float(x[12:17]), float(x[18:25])))
