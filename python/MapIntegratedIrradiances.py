@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import findspark
 findspark.init()
 from pyspark import SparkContext
@@ -17,7 +17,7 @@ sql=SQLContext(sc)
 
 # Get the path to the top level of the repo
 with open(".PWD") as f:
-  repo_path = f.readline()
+  repo_path = f.readline().strip()
 
 # Function to make a triplet (lat, long, line) for each line in a given file
 # The latitude and longitude are parsed from the filename f
