@@ -1,7 +1,7 @@
 # SolarProject_BC
 
 ## Requirements
-  * python3 with pip
+  * python3 with pip3
   * pyspark
   * gnumeric (for ubuntu: sudo apt-get install -y gnumeric)
    
@@ -12,12 +12,10 @@
   
 ~~~~
 cd python
-pip install -r Requirements.txt
+pip3 install -r Requirements.txt
 cd ..
 ~~~~
-  
-(may need to use pip3 if pip isn't connected to your python3 installation).
-  
+    
 2. Create the Tables directory and sub-directories. If there's enough free space (~30 GB) in the root disk, it can be created directly in the top-level directory of the git repo:
   
 ~~~~
