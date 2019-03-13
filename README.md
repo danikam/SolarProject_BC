@@ -85,4 +85,8 @@ bash/MakeListOfIrradianceFiles.sh
 python/ReadShapeFile.py
 ~~~~
 
-3. 
+3. Run the python script MapIntegratedIrradiances.py to create and save a dataframe for all the data lying in BC containing a set of coordinates, a time stamp, and the GHI (global horizontal irradiance) on each row, and also a dataframe containing the average GHI for each set of coordinates.
+
+~~~~
+python/MapIntegratedIrradiances.py
+~~~~
