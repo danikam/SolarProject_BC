@@ -16,51 +16,64 @@ from shutil import copyfile
 import os
 import io
 import glob
-#from hdfs import InsecureClient
 import subprocess
 import datetime as dt
 from pytz import timezone
+import multiprocessing
 
 sc=SparkContext()
 sql=SQLContext(sc)
 
 start_time = time.time()
 
-# Get the path to the top level of the repo
-with open(".PWD") as f:
-  repo_path = f.readline().strip()
+# Get the number of CPUs on the given
+N_CORES = multiprocessing.cpu_count()
+
+def make_data(fnm_content):
+  fnm=fnm_content[0]
+  basename = fnm.split("/")[-1]
   
-# Function to make an ntuple (lat, long, year, time stamp, GHI) for each line in a given file
-# The latitude and longitude are parsed from the filename f
-def proc(f):
+  basename_underscore = basename.split("_")
+  lat = float(basename_underscore[0])
   
-  # Function to make the data line for the given file f
-  def MakeDataLine(line):
-    line_list = line.split(',')
+  basename_period = basename_underscore[1].split(".")
+  lon = float(basename_period[0] + "." + basename_period[1])
+  
+  content=fnm_content[1]
+  list_of_lines = (content.split("\n"))[:-1]
+  lats=[lat]*len(list_of_lines)
+  lons=[lon]*len(list_of_lines)
+
+  reformatted_lines=[]
+  for line in list_of_lines:
+    line_list = line.split(",")
     year = int(line_list[0])
     month = int(line_list[2])
     day = int(line_list[3])
     hour = int(line_list[4])
     GHI = int(line_list[5])
+    reformatted_lines.append((year, month, day, hour, GHI))
     
-    # Convert the year, month, day, and hour (in UTC) to a timestamp
-    time_dt = dt.datetime(year, month, day, hour)
-    time_utc = timezone('UTC').localize(time_dt)
-    timestamp = time_utc.timestamp()
-    return (float((f.split("/")[-1])[0:5]), float((f.split("/")[-1])[6:13]), year, timestamp, GHI)
+  return zip(lats,lons,reformatted_lines)
 
-  return sc.textFile(f).map(MakeDataLine)
+def convert_data(line_ntuple):
+  lat = line_ntuple[0]
+  lon = line_ntuple[1]
+  info = line_ntuple[2]
+  year=info[0]
+  month=info[1]
+  day=info[2]
+  hour=info[3]
+  GHI=info[4]
+  time_dt = dt.datetime(year, month, day, hour)
+  time_utc = timezone('UTC').localize(time_dt)
+  timestamp = time_utc.timestamp()
+  return (lat, lon, year, timestamp, GHI)
 
-# Get a list of all files in the IrradianceData_isInBC directory in HDFS
-p=subprocess.Popen(["/opt/software/hadoop-2.8.5/bin/hadoop", "fs", "-ls", "-C", "/user/ubuntu/IrradianceData_isInBC/*.csv"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-out, err = p.communicate()
-filelist = out.decode("utf-8").split('\n')[:-1]
-
-# Create an RDD from the union of ordered ntuples obtained from each irradiance file
-#irr_RDD = sc.union([proc(f) for f in glob.glob("file://%s/Tables/IrradianceData_isInBC/*.csv"%repo_path)])
-irr_RDD = sc.union([proc(f) for f in filelist])  
-#print(irr_RDD.take(1))
-
+# Open the irradiance data as whole text files, and reformat into ntuples (lat, long, year, timestamp, GHI))
+irr_RDD=sc.wholeTextFiles('/user/ubuntu/IrradianceData_isInBC/*.csv').flatMap(make_data).repartition(2*N_CORES).map(convert_data)
+#print(irr_RDD.take(1))  
+  
 # Convert the RDD to a dataframe
 irr_DF = irr_RDD.toDF(["Lat", "Long", "Year", "Timestamp", "GHI"])
 #irr_DF.show(n=2)
