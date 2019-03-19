@@ -90,3 +90,9 @@ python/ReadShapeFile.py
 ~~~~
 python/MapIntegratedIrradiances.py
 ~~~~
+
+4. Run the python script SelectRandomCoords.py to randomize
+
+~~~~
+
+~~~~
