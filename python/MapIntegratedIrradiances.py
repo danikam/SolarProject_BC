@@ -72,7 +72,7 @@ def convert_data(line_ntuple):
   return (lat, lon, year, timestamp, GHI)
 
 # Open the irradiance data as whole text files, and reformat into ntuples (lat, long, year, timestamp, GHI))
-irr_RDD=sc.wholeTextFiles('/user/ubuntu/IrradianceData_isInBC/*.csv').flatMap(make_data).repartition(2*N_CORES).map(convert_data)
+irr_RDD = sc.wholeTextFiles('/user/ubuntu/IrradianceData_isInBC/*.csv').flatMap(make_data).repartition(2*N_CORES).map(convert_data)
 #print(irr_RDD.take(1))  
   
 # Convert the RDD to a dataframe
