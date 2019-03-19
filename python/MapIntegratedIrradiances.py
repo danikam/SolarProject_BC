@@ -45,6 +45,7 @@ def make_data(fnm_content):
   # Reformat the lines to display the info of interest
   GHIs = []
   for line in list_of_lines:
+    line_list = line.split(",")
     GHI = int(line_list[5])
     GHIs.append(GHI)
   
