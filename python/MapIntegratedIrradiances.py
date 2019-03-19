@@ -43,44 +43,21 @@ def make_data(fnm_content):
   lons=[lon]*len(list_of_lines)
 
   # Reformat the lines to display the info of interest
-  reformatted_lines=[]
+  GHIs = []
   for line in list_of_lines:
-    line_list = line.split(",")
-    year = int(line_list[0])
-    month = int(line_list[2])
-    day = int(line_list[3])
-    hour = int(line_list[4])
     GHI = int(line_list[5])
-    reformatted_lines.append((year, month, day, hour, GHI))
+    GHIs.append(GHI)
   
-  # Zip together the latitude, longitude, and line contents
-  return zip(lats,lons,reformatted_lines)
-
-# Function to convert the year, month, day, and hour to a timestamp, and reformat the RDD line contents accordingly
-def convert_data(line_ntuple):
-  lat = line_ntuple[0]
-  lon = line_ntuple[1]
-  info = line_ntuple[2]
-  year=info[0]
-  month=info[1]
-  day=info[2]
-  hour=info[3]
-  GHI=info[4]
-  time_dt = dt.datetime(year, month, day, hour)
-  time_utc = timezone('UTC').localize(time_dt)
-  timestamp = time_utc.timestamp()
-  return (lat, lon, year, timestamp, GHI)
+  # Zip together the latitude, longitude, and GHI
+  return zip(lats, lons, GHIs)
 
 # Open the irradiance data as whole text files, and reformat into ntuples (lat, long, year, timestamp, GHI))
-irr_RDD = sc.wholeTextFiles('/user/ubuntu/IrradianceData_isInBC/*.csv').flatMap(make_data).repartition(2*N_CORES).map(convert_data)
+irr_RDD = sc.wholeTextFiles('/user/ubuntu/IrradianceData_isInBC/*.csv').flatMap(make_data).repartition(2*N_CORES)
 #print(irr_RDD.take(1))  
   
 # Convert the RDD to a dataframe
-irr_DF = irr_RDD.toDF(["Lat", "Long", "Year", "Timestamp", "GHI"])
+irr_DF = irr_RDD.toDF(["Lat", "Long", "GHI"])
 #irr_DF.show(n=2)
-
-# Save the full irradiance dataframe to HDFS
-irr_DF.write.save('/user/ubuntu/IrradianceMap/TimeSeriesIrradiance_df', format='csv', mode='overwrite')
 
 # Obtain the average irradiance for each latitude and longitude
 irr_avg_DF = irr_DF.groupby("Lat", "Long").avg("GHI")
