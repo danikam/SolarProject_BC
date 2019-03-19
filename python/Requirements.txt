@@ -7,7 +7,7 @@ shapely
 shapely[vectorized]
 pyspark
 findspark
-hdfs
+hdfs3
 #time
 #shutil
 #os
