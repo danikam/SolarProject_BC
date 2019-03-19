@@ -64,20 +64,8 @@ flnms_RDD=sc.textFile("file://%s/Tables/IrradianceData/filenames.txt"%repo_path)
 #flnms_RDD.foreach(CopyIrFile)
 
 # Save each file whose coordinates lie within BC to HDFS
-print(flnms_RDD.count())
+#print(flnms_RDD.count())
 flnms_RDD.foreach(SaveIrFile2HDFS)
-
-# Collect the coordinates within BC (lat, long)
-#coords_RDD=flnms_RDD.map(lambda x: (float(x[12:17]), float(x[18:25])))
-
-#print(coords_RDD.take(1))
-
-#irr_RDD=flnms_RDD.map(lambda x: np.genfromtxt("/Users/danikamacdonell/Courses/Phys511A/SolarProject/Tables/IrradianceData_BC/%s"%x, delimiter=","))
-
-#print(flnms_RDD.collect())
-#irr_RDD=sc.textFile(",".join(["Tables/IrradianceData_BC/"+s for s in flnms_RDD.collect()]))
-
-#print(irr_RDD.take(1))
 
 print("Time elapsed: %ds"%(time.time()-start_time))
 
