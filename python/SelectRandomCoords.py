@@ -5,7 +5,6 @@ from pyspark import SparkContext
 from pyspark import SparkConf
 from pyspark.sql import SQLContext
 import pyspark.sql.functions as f
-from pyspark.sql.types import FloatType
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import time
