@@ -82,8 +82,18 @@ with open(".PWD") as f:
 # Collect the load data for the years of interest
 load_RDD = sc.textFile("%s/Tables/LoadData/BalancingAuthorityLoad*.csv")
 
+def make_filename(coord_string):
+  coord_list = coord_string.split(",")
+  lat = coord_list[0]
+  long = coord_list[1]
+  return "/user/ubuntu/IrradianceData_isInBC/%s_%s.csv"%(lat, long)
+
 # Collect the irradiance data for the selected coordinates
-site_coords = sc.textFile('/user/ubuntu/IrradianceMap/SampledCoords_df')
-print(site_coords.take(5))
-irr_RDD = sc.textFile('/user/ubuntu/IrradianceMap/TimeSeriesIrradiance_df').filter()
+filenames = sc.textFile('/user/ubuntu/IrradianceMap/SampledCoords_df').map(make_filename).collect()
+print(site_coords[0:5])
+
+irr_RDD = sc.wholeTextFiles(','.join(filenames)).flatMap(make_data).repartition(2*N_CORES).map(convert_data)
+
+print(irr_RDD.take(5))
+
 
