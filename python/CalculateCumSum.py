@@ -14,6 +14,7 @@ import time
 import datetime as dt
 from pytz import timezone
 import multiprocessing
+import pyarrow as pa
 plt.rc('xtick', labelsize=20)
 plt.rc('ytick', labelsize=20)
 
@@ -68,7 +69,7 @@ def convert_data(line_ntuple):
   GHI=info[4]
   time_dt = dt.datetime(year, month, day, hour)
   time_utc = timezone('UTC').localize(time_dt)
-  timestamp = time_utc.timestamp()
+  timestamp = int(time_utc.timestamp())
   return (lat, lon, year, timestamp, GHI)
 
 # Function to convert a string of coordinates into the hdfs filename containing irradiance data for the given set of coordinates
@@ -89,7 +90,7 @@ def reformat_load_data(line_content):
   # Convert the date and hour to a timestamp
   time_dt = dt.datetime(year, month, day, hour)
   time_pacific = timezone('US/Pacific').localize(time_dt)
-  timestamp = time_pacific.timestamp()
+  timestamp = int(time_pacific.timestamp())
 
   # Save the reformatted data as an ntuple
   load = int(content_list[2])    # Load, in MWh
@@ -125,7 +126,7 @@ power_DF.show(n=24)
 # Find the cumulative sum of the load and GHI columns
 power_DF = power_DF.selectExpr(
     "Year", "Timestamp", "GHI_Sum", "Load",  
-    "sum(GHI_sum) over (order by Timestamp) as GHI_cumsum", "sum(Load) over (order by Timestamp) as Load_cumsum").repartition(2*N_CORES).cache()
+    "sum(GHI_sum) over (order by Timestamp) as GHI_cumsum", "sum(Load) over (order by Timestamp) as Load_cumsum").repartition(2*N_CORES).sort("Timestamp").cache()
 power_DF.show(n=24)
 
 # Normalize the GHI sum and cumulative sum so that the final cumulative sum of the GHI is the same as that for the load
@@ -134,13 +135,23 @@ lastRow = power_DF.filter(power_DF.Timestamp == maxTimestamp).rdd.map(tuple).col
 #print(lastRow)
 maxGHI = lastRow[4]
 maxLoad = lastRow[5]
-powerRatio = maxGHI/maxLoad
+powerRatio = maxLoad/maxGHI
 #print(maxGHI, maxLoad)
 
-power_RDD = power_DF.rdd.map(tuple).map(lambda x: (x[0], x[1], x[2], x[3]*powerRatio, x[4], x[5]*powerRatio)).repartition(2*N_CORES).cache()
-power_RDD = power_RDD.map(lambda x: (x[0], x[1], x[2], x[3], x[4], x[5], x[4]-x[5]))
+# Filter out any non-physical points with 0 load
+power_RDD = power_DF.filter(power_DF.Load > 0).rdd.map(tuple).map(lambda x: (x[0], x[1], x[2], x[2]*powerRatio, x[3], x[4], x[4]*powerRatio, x[5])).repartition(2*N_CORES).cache()
+power_RDD = power_RDD.map(lambda x: (x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[6]-x[7]))
 #max_energy_list = power_RDD.max(lambda x: abs(x[6]))
 #print(max_energy_list)
-power_RDD.saveAsTextFile('/user/ubuntu/IrradianceMap/'
+
+# Delete the directory to write to if needed
+fs = pa.hdfs.connect(host="bgdtn", port=9000, user="ubuntu")
+try:
+  fs.delete('/user/ubuntu/SolarAnalysis/PowerCumSum', recursive=True)
+  print("Removed HDFS directory /user/ubuntu/SolarAnalysis/PowerCumSum")
+except IOError:
+  print("HDFS directory /user/ubuntu/SolarAnalysis/PowerCumSum not present - no need to delete. (Or some other nefarious IO error...)")
+  
+power_RDD.map(lambda x: ','.join(str(d) for d in x)).saveAsTextFile('/user/ubuntu/SolarAnalysis/PowerCumSum')
 
 print("Elapsed Time: %ds"%(time.time()-start_time))
