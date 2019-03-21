@@ -57,12 +57,14 @@ irr_RDD = sc.wholeTextFiles('/user/ubuntu/IrradianceData_isInBC/*.csv').flatMap(
 #print(irr_RDD.take(1))  
   
 # Convert the RDD to a dataframe
-irr_DF = irr_RDD.toDF(["Lat", "Long", "GHI"])
+irr_DF = irr_RDD.toDF(["Lat", "Long", "GHI"]).repartition(2*N_CORES)
 #irr_DF.show(n=2)
 
-# Obtain the average irradiance for each latitude and longitude
-irr_avg_DF = irr_DF.groupby("Lat", "Long").avg("GHI")
-#irr_avg_DF.show(n=10)
+# Obtain the average and max irradiance for each latitude and longitude
+irr_avg_DF = irr_DF.groupby("Lat", "Long").agg(F.avg(irr_DF.GHI), F.max(irr_DF.GHI))
+
+#irr_avg_DF = irr_avg_DF.groupby("Lat", "Long", "avg(GHI)").max("GHI")
+irr_avg_DF.show(n=10)
 
 # Save the average irradiance dataframe to HDFS
 irr_avg_DF.write.save('/user/ubuntu/IrradianceMap/AverageIrradiance_df', format='csv', mode='overwrite')
