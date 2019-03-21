@@ -20,6 +20,7 @@ start_time = time.time()
 
 # Function to randomly select 100 indices from a Gaussian distribution of indices peaked at the maximum index (N_coords-1)
 def sample_gaussian(nSamples, N_coords):
+    np.random.seed(0)   # Fix the random seed for reproducibility
     samples = np.random.normal(1,0.1, N_coords*3)
     indices_selected = np.unique(np.floor(samples[(samples<1)&(samples>0)]*N_coords))
     indices = np.random.choice(indices_selected, nSamples, replace=False)
@@ -32,6 +33,7 @@ irr_avg_DF = sql.read.format('csv').load("/user/ubuntu/IrradianceMap/AverageIrra
 irr_avg_DF = irr_avg_DF.withColumnRenamed("_c0", "Lat")
 irr_avg_DF = irr_avg_DF.withColumnRenamed("_c1", "Long")
 irr_avg_DF = irr_avg_DF.withColumnRenamed("_c2", "GHI_Avg")
+irr_avg_DF = irr_avg_DF.withColumnRenamed("_c3", "GHI_Max")
 irr_avg_DF = irr_avg_DF.sort("GHI_Avg")
 #irr_avg_DF.show(n=10)
 
@@ -42,11 +44,11 @@ selection = sample_gaussian(100, N_coords)
 # Convert the dataframe to an RDD, add the index to each ntuple, and convert back to a dataframe
 # so that each row of the dataframe now has a row index
 irr_avg_RDD = irr_avg_DF.rdd.map(tuple)
-irr_avg_RDD = irr_avg_RDD.zipWithIndex().map(lambda x: (x[0][0], x[0][1], x[0][2], x[1]))
-irr_avg_DF = irr_avg_RDD.toDF(["Lat", "Long", "GHI_Avg", "Index"])
+irr_avg_RDD = irr_avg_RDD.zipWithIndex().map(lambda x: (x[0][0], x[0][1], x[0][2], x[0][3], x[1]))
+irr_avg_DF = irr_avg_RDD.toDF(["Lat", "Long", "GHI_Avg", "GHI_Max", "Index"])
 
 # Filter for the selected indices
-irr_avg_DF_sample = irr_avg_DF.filter(irr_avg_DF.Index.isin(selection))
+irr_avg_DF_sample = irr_avg_DF.filter(irr_avg_DF.Index.isin(selection)).repartition(2*N_CORES).cache()
 #irr_avg_DF_sample.show(n=5)
 
 # Select the latitude and longitude columns to save
@@ -86,7 +88,19 @@ Longs_sel = irr_avg_DF_sample_coords.select("Long").collect()
 plt.scatter(Longs_sel, Lats_sel, c="black", s=1, label="Selected Sites")
 plt.legend()
 plt.savefig("%s/Plots/IrradianceMap.png"%repo_path)
-
+plt.close()
 ################################################################
+
+# Also plot the maximum GHI over the province
+data_bc.plot(figsize=(6,3.2))
+plt.xlabel("Longitude (degrees)")
+plt.ylabel("Latitude (degrees)")
+
+GHIs_max = irr_avg_DF.select("GHI_Max").collect()
+
+# Overlay the BC border with a color plot of the max GHI                                                                                                                        
+plt.scatter(Longs, Lats, c=GHIs_max, s=0.2, cmap=cm.jet)
+cbar = plt.colorbar(pad=0.02, label="Maximum GHI (Wh/m$^2$)")
+plt.savefig("%s/Plots/MaxIrradianceMap.png"%repo_path)
 
 print("Time Elapsed: %ds"%(time.time()-start_time))
