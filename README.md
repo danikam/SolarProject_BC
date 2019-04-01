@@ -85,14 +85,24 @@ bash/MakeListOfIrradianceFiles.sh
 python/ReadShapeFile.py
 ~~~~
 
-3. Run the python script MapIntegratedIrradiances.py to create and save a dataframe for all the data lying in BC containing a set of coordinates, a time stamp, and the GHI (global horizontal irradiance) on each row, and also a dataframe containing the average GHI for each set of coordinates.
+## Perform the analysis to determine the minimum required storage capacity
+
+1. Run the python script MapIntegratedIrradiances.py to create and save a dataframe for all the data lying in BC containing a set of coordinates, a time stamp, and the GHI (global horizontal irradiance) on each row, and also a dataframe containing the average GHI for each set of coordinates.
 
 ~~~~
 python/MapIntegratedIrradiances.py
 ~~~~
 
-4. Run the python script SelectRandomCoords.py to randomize
+2. Run the python script SelectRandomCoords.py to sort the dataframe saved by MapIntegratedIrradiances.py containing the coordinates and average GHI according to average GHI, and randomly select 100 indices from a Gaussian distribution peaked at the maximum number of indices for the solar farm sites. 
 
 ~~~~
+python/SelectRandomCoords.py
+~~~~
 
+A map of the average GHI over BC is also plotted, along with the randomly chosen solar farm sites.
+
+3. Run CalculateCumSum.py to combine the dataframe containing coordinates time stamps, and GHIs with an equivalent dataframe containing the BC hydro load, and scale the GHI column such that the cumulative sums of the GHI and load columns match.
+
+~~~~
+python/CalculateCumSum.py
 ~~~~
