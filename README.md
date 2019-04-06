@@ -2,7 +2,8 @@
 
 ## Requirements
   * python3 with pip3
-  * pyspark
+  * Hadoop 2.8.5
+  * spark 2.4.0 with pyspark
   * gnumeric (for ubuntu: sudo apt-get install -y gnumeric)
    
    
