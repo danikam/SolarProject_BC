@@ -80,10 +80,10 @@ This should also take less than a minute.
 bash/MakeListOfIrradianceFiles.sh
 ~~~~
 
-2. Run the python script ReadShapeFile.py to copy the solar irradiance files with coordinates lying within BC into HDFS:
+2. Run the python script CopyIrradianceData2HDFS.py to copy the solar irradiance files with coordinates lying within BC into HDFS:
 
 ~~~~
-python/ReadShapeFile.py
+python/CopyIrradianceData2HDFS.py
 ~~~~
 
 ## 3. Perform the analysis to determine the minimum required storage capacity
