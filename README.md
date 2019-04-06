@@ -7,7 +7,7 @@
   * gnumeric (for ubuntu: sudo apt-get install -y gnumeric)
    
    
-## Install python modules and download data
+## 1. Install python modules and download data
   
 1. Install the required python modules as follows:
   
@@ -72,7 +72,7 @@ bash/DownloadContourData.sh
 This should also take less than a minute.
 
 
-## Copy irradiance files with BC coordinates to HDFS
+## 2. Copy irradiance files with BC coordinates to HDFS
 
 1. Make a list of filenames for the downloaded irradiance files, from which the geographical longitude and latitude of the data can be parsed:
 
@@ -86,7 +86,7 @@ bash/MakeListOfIrradianceFiles.sh
 python/ReadShapeFile.py
 ~~~~
 
-## Perform the analysis to determine the minimum required storage capacity
+## 3. Perform the analysis to determine the minimum required storage capacity
 
 1. Run the python script MapIntegratedIrradiances.py to create and save a dataframe for all the data lying in BC containing a set of coordinates, a time stamp, and the GHI (global horizontal irradiance) on each row, and also a dataframe containing the average GHI for each set of coordinates.
 
