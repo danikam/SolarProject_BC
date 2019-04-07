@@ -108,8 +108,8 @@ A map of the average GHI over BC is also plotted, along with the randomly chosen
 python/CalculateCumSum.py
 ~~~~
 
-4. Run AnalyzeIrradianceData.py to visualize the GHI and load data, as well as their cumulative sums (i.e. accumulated energy), and use the maximum difference between the cumulative GHI and load sums to determine the maximum required storage capacity.
+4. Run AnalyzeResults.py to visualize the GHI and load data, as well as their cumulative sums (i.e. accumulated energy), and use the maximum difference between the cumulative GHI and load sums to determine the maximum required storage capacity.
 
 ~~~~
-python/AnalyzeIrradianceData.py
+python/AnalyzeResults.py
 ~~~~
