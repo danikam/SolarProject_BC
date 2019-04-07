@@ -88,10 +88,10 @@ python/CopyIrradianceData2HDFS.py
 
 ## 3. Perform the analysis to determine the minimum required storage capacity
 
-1. Run the python script IrrData2DF.py to create and save a dataframe for all the data lying in BC containing a set of coordinates, a time stamp, and the GHI (global horizontal irradiance) on each row, and also a dataframe containing the average GHI for each set of coordinates.
+1. Run the python script CalculateAverageGHI.py to create and save a dataframe for all the data lying in BC containing a set of coordinates, a time stamp, and the GHI (global horizontal irradiance) on each row, and also a dataframe containing the average GHI for each set of coordinates.
 
 ~~~~
-python/IrrData2DF.py
+python/CalculateAverageGHI.py
 ~~~~
 
 2. Run the python script SelectRandomCoords.py to sort the dataframe saved by MapIntegratedIrradiances.py containing the coordinates and average GHI according to average GHI, and randomly select 100 indices from a Gaussian distribution peaked at the maximum number of indices for the solar farm sites. 
