@@ -11,17 +11,20 @@ import time
 import pandas as pd
 import geopandas as gpd
 import numpy as np
-from pyspark.sql.functions import lit
+import multiprocessing
 
 sc=SparkContext()
 sql=SQLContext(sc)
 
 start_time = time.time()
 
+# Get the number of CPUs on the given machine
+N_CORES = multiprocessing.cpu_count()
+
 # Function to randomly select 100 indices from a Gaussian distribution of indices peaked at the maximum index (N_coords-1)
 def sample_gaussian(nSamples, N_coords):
     np.random.seed(0)   # Fix the random seed for reproducibility
-    samples = np.random.normal(1,0.1, N_coords*3)
+    samples = np.random.normal(1,0.1, N_coords*4)
     indices_selected = np.unique(np.floor(samples[(samples<1)&(samples>0)]*N_coords))
     indices = np.random.choice(indices_selected, nSamples, replace=False)
     return indices.astype(int).tolist()
@@ -37,15 +40,15 @@ irr_avg_DF = irr_avg_DF.withColumnRenamed("_c3", "GHI_Max")
 irr_avg_DF = irr_avg_DF.sort("GHI_Avg")
 #irr_avg_DF.show(n=10)
 
-# Randomly select the indices for the solar site locations, with a preference for locations with higher GHI
-N_coords = irr_avg_DF.count()
-selection = sample_gaussian(100, N_coords)
-
 # Convert the dataframe to an RDD, add the index to each ntuple, and convert back to a dataframe
 # so that each row of the dataframe now has a row index
 irr_avg_RDD = irr_avg_DF.rdd.map(tuple)
 irr_avg_RDD = irr_avg_RDD.zipWithIndex().map(lambda x: (x[0][0], x[0][1], x[0][2], x[0][3], x[1]))
 irr_avg_DF = irr_avg_RDD.toDF(["Lat", "Long", "GHI_Avg", "GHI_Max", "Index"])
+
+# Randomly select the indices for the solar site locations, with a preference for locations with higher GHI
+N_coords = irr_avg_DF.count()
+selection = sample_gaussian(100, N_coords)
 
 # Filter for the selected indices
 irr_avg_DF_sample = irr_avg_DF.filter(irr_avg_DF.Index.isin(selection)).repartition(2*N_CORES).cache()
