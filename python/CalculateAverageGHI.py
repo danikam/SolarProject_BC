@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Date:     180312                                                                                                                                                                                                                            
-# Purpose:   Calculate the integrated solar irradiance for all locations in BC over all years from 2002 to 2008, and visualize as a 2D colour plot. Use the integrated solar irradiance to randomly select solar farm sites, with a preference for higher-irradiance areas.
+# Purpose:   Represent the GHI for all locations in BC over all years from 2002 to 2008 as a pyspark dataframe, and calculate the average GHI over whole time period for each coordinate. 
 
 import findspark
 findspark.init()
@@ -63,8 +63,7 @@ irr_DF = irr_RDD.toDF(["Lat", "Long", "GHI"]).repartition(2*N_CORES)
 # Obtain the average and max irradiance for each latitude and longitude
 irr_avg_DF = irr_DF.groupby("Lat", "Long").agg(F.avg(irr_DF.GHI), F.max(irr_DF.GHI))
 
-#irr_avg_DF = irr_avg_DF.groupby("Lat", "Long", "avg(GHI)").max("GHI")
-irr_avg_DF.show(n=10)
+#irr_avg_DF.show(n=10)
 
 # Save the average irradiance dataframe to HDFS
 irr_avg_DF.write.save('/user/ubuntu/IrradianceMap/AverageIrradiance_df', format='csv', mode='overwrite')
