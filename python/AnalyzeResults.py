@@ -22,6 +22,10 @@ start_time = time.time()
 # Get the number of CPUs on the given machine
 N_CORES = multiprocessing.cpu_count()
 
+# Get the path to the top level of the repo
+with open(".PWD") as f:
+  repo_path = f.readline().strip()
+
 # Define constants to keep track of the indices of the power_RDD tuple
 iYEAR=0
 iTIMESTAMP=1
@@ -49,7 +53,7 @@ ax.plot(times, loads, 'o', markersize=1, color="red")
 ax.set_title("BC Hydro Load Data", fontsize=25)
 ax.set_ylabel("Load (MW)", fontsize=25)
 plt.tight_layout()
-plt.savefig("../Plots/LoadData.png")
+plt.savefig("%s/Plots/LoadData.png"%repo_path)
 
 GHIs = power_RDD.map(lambda x: x[iGHI]).map(lambda x: x/1e6).collect()   # Convert to MW/m^2                                                                                         
 fig = plt.figure(figsize =(11, 9));ax=fig.add_subplot(1,1,1)
@@ -57,7 +61,7 @@ ax.plot(times, GHIs, 'o', markersize=1, color="green")
 ax.set_title("Total Global Horizontal Irradiance Per Unit Area\nover the 100 Selected Sites", fontsize=25)
 ax.set_ylabel("GHI (MW/m$^2$)", fontsize=25)
 plt.tight_layout()
-plt.savefig("../Plots/IrrData.png")
+plt.savefig("%s/Plots/IrrData.png"%repo_path)
 
 # Plot the time variation in scaled GHI and load together
 GHIs_scaled = power_RDD.map(lambda x: x[iGHI_SCALED]).collect()
@@ -68,7 +72,7 @@ ax.set_title("Comparison of BC Hydro Load and Scaled GHI", fontsize=25)
 ax.set_ylabel("Power (MW)", fontsize=25)
 ax.legend(prop={'size': 25}, markerscale=10)
 plt.tight_layout()
-plt.savefig("../Plots/PowerComparison.png")
+plt.savefig("%s/Plots/PowerComparison.png"%repo_path)
 
 # Plot the time variation in cumulative scaled GHI and load together, with the difference in a sub-panel, to illustrate the need for the addition of an offset
 loads_cumsum = power_RDD.map(lambda x: 1.0*x[iLOAD_CUMSUM]/1e6).collect()
@@ -86,7 +90,7 @@ ax2.plot(times, diffs, color="blue")
 ax2.set_ylabel("GHI-Load (TWh)", fontsize=25)
 ax2.axhline(0, linestyle="--", color="black")
 plt.tight_layout()
-plt.savefig("../Plots/EnergyComparison_BeforeShift.png")
+plt.savefig("%s/Plots/EnergyComparison_BeforeShift.png"%repo_path)
 
 # Shift the cumulative GHI upwards so that it's always at least as large as the load
 min_diff_list = power_RDD.min(lambda x: x[iDIFF])
@@ -113,7 +117,7 @@ ax2.plot(times, diffs, color="blue")
 ax2.set_ylabel("GHI-Load (TWh)", fontsize=25)
 ax2.axhline(0, linestyle="--", color="black")
 plt.tight_layout()
-plt.savefig("../Plots/EnergyComparison.png")
+plt.savefig("%s/Plots/EnergyComparison.png"%repo_path)
   
 # Calculate the maximum difference between the cumulative GHI and the cumulative load
 max_diff_list = power_RDD.max(lambda x: x[iDIFF])
