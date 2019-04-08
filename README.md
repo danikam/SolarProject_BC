@@ -2,11 +2,12 @@
 
 ## Requirements
   * python3 with pip3
-  * pyspark
+  * Hadoop 2.8.5
+  * spark 2.4.0 with pyspark
   * gnumeric (for ubuntu: sudo apt-get install -y gnumeric)
    
    
-## Install python modules and download data
+## 1. Install python modules and download data
   
 1. Install the required python modules as follows:
   
@@ -71,7 +72,7 @@ bash/DownloadContourData.sh
 This should also take less than a minute.
 
 
-## Copy irradiance files with BC coordinates to HDFS
+## 2. Copy irradiance files with BC coordinates to HDFS
 
 1. Make a list of filenames for the downloaded irradiance files, from which the geographical longitude and latitude of the data can be parsed:
 
@@ -79,20 +80,36 @@ This should also take less than a minute.
 bash/MakeListOfIrradianceFiles.sh
 ~~~~
 
-2. Run the python script ReadShapeFile.py to copy the solar irradiance files with coordinates lying within BC into HDFS:
+2. Run the python script CopyIrradianceData2HDFS.py to copy the solar irradiance files with coordinates lying within BC into HDFS:
 
 ~~~~
-python/ReadShapeFile.py
+python/CopyIrradianceData2HDFS.py
 ~~~~
 
-3. Run the python script MapIntegratedIrradiances.py to create and save a dataframe for all the data lying in BC containing a set of coordinates, a time stamp, and the GHI (global horizontal irradiance) on each row, and also a dataframe containing the average GHI for each set of coordinates.
+## 3. Perform the analysis to determine the minimum required storage capacity
+
+1. Run the python script CalculateAverageGHI.py to create and save a dataframe for all the data lying in BC containing a set of coordinates, a time stamp, and the GHI (global horizontal irradiance) on each row, and also a dataframe containing the average GHI for each set of coordinates.
 
 ~~~~
-python/MapIntegratedIrradiances.py
+python/CalculateAverageGHI.py
 ~~~~
 
-4. Run the python script SelectRandomCoords.py to randomize
+2. Run the python script SelectRandomCoords.py to sort the dataframe saved by MapIntegratedIrradiances.py containing the coordinates and average GHI according to average GHI, and randomly select 100 indices from a Gaussian distribution peaked at the maximum number of indices for the solar farm sites. 
 
 ~~~~
+python/SelectRandomCoords.py
+~~~~
 
+A map of the average GHI over BC is also plotted, along with the randomly chosen solar farm sites.
+
+3. Run CalculateCumSum.py to combine the dataframe containing coordinates time stamps, and GHIs with an equivalent dataframe containing the BC hydro load, and scale the GHI column such that the cumulative sums of the GHI and load columns match.
+
+~~~~
+python/CalculateCumSum.py
+~~~~
+
+4. Run AnalyzeResults.py to visualize the GHI and load data, as well as their cumulative sums (i.e. accumulated energy), and use the maximum difference between the cumulative GHI and load sums to determine the maximum required storage capacity.
+
+~~~~
+python/AnalyzeResults.py
 ~~~~
