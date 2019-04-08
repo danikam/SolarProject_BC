@@ -7,18 +7,16 @@ from pyspark.sql import SQLContext
 import pandas as pd
 import numpy as np
 import geopandas as gpd
-import matplotlib.pyplot as plt
 from shapely.geometry import Point, Polygon
 import shapely.speedups
 shapely.speedups.enable()   # Enable speedups of shapely procedures
 import time
-from shutil import copyfile
 import os
 import subprocess
 import multiprocessing
 
+# Initialize the spark context
 sc=SparkContext()
-sql=SQLContext(sc)
 
 # Get the number of CPUs on the given machine
 N_CORES = multiprocessing.cpu_count()
@@ -33,39 +31,32 @@ data_can_broadcast = gpd.read_file(fp)
 data_can=sc.broadcast(data_can_broadcast)
 
 # Function to determine whether a particular point lies within BC
-def isInBC(flnm_cntnt):
+def is_in_bc(flnm_cntnt):
   filename=os.fsdecode(flnm_cntnt)
   lat = float(filename[12:17])
   long = float(filename[18:25])
+  # Note: the '1' in loc[1, 'geometry'] is because BC is the second entry in the shapefile
   return data_can.value.loc[1, 'geometry'].contains(Point(long,lat))
-#  return 1
-
-# Function to copy the input file to a directory Tables/IrradianceData_isInBC
-def CopyIrFile(filename):
-  lat = float(filename[12:17])
-  long = float(filename[18:25])
-  copyfile("%s/Tables/IrradianceData/%s"%(repo_path, filename), "%s/Tables/IrradianceData_isInBC/%.2f_%.2f.csv"%(repo_path, lat, long))
-  return 1
 
 # Function to save the input file to HDFS
-def SaveIrFile2HDFS(filename):
+def save_ir_file_2_hdfs(filename):
   lat = float(filename[12:17])
   long = float(filename[18:25])
-  subprocess.call(["/opt/software/hadoop-2.8.5/bin/hadoop", "fs", "-copyFromLocal", "%s/Tables/IrradianceData/%s"%(repo_path, filename), "/user/ubuntu/IrradianceData_isInBC/%.2f_%.2f.csv"%(lat, long)])
+  subprocess.call(["/opt/software/hadoop-2.8.5/bin/hdfs", "dfs", "-copyFromLocal", "%s/Tables/IrradianceData/%s"%(repo_path, filename), "/user/ubuntu/IrradianceData_isInBC/%.2f_%.2f.csv"%(lat, long)])
   return 1
 
 start_time=time.time()
 
-# Collect the filenames for the coordinates within BC
-flnms_RDD=sc.textFile("file://%s/Tables/IrradianceData/filenames.txt"%repo_path).repartition(N_CORES).filter(isInBC).cache()
-#print(flnms_RDD.take(1))
+# Create the directory in HDFS to contain the filenames, if needed
+subprocess.call(["/opt/software/hadoop-2.8.5/bin/hdfs", "dfs", "-mkdir", "-p", "/user/ubuntu/IrradianceData_isInBC"])
 
-# Copy each file whose coordinates lie within BC to a dedicated directory
-#flnms_RDD.foreach(CopyIrFile)
+# Collect the filenames for the coordinates within BC
+flnms_RDD=sc.textFile("file://%s/Tables/IrradianceData/filenames.txt"%repo_path).repartition(N_CORES).filter(is_in_bc).cache()
+#print(flnms_RDD.take(1))
 
 # Save each file whose coordinates lie within BC to HDFS
 #print(flnms_RDD.count())
-flnms_RDD.foreach(SaveIrFile2HDFS)
+flnms_RDD.foreach(save_ir_file_2_hdfs)
 
 print("Time elapsed: %ds"%(time.time()-start_time))
 
