@@ -18,10 +18,16 @@ import pyarrow as pa
 plt.rc('xtick', labelsize=20)
 plt.rc('ytick', labelsize=20)
 
-
 sc=SparkContext()
 sql=SQLContext(sc)
 
+# Get the number of CPUs on the given machine
+N_CORES = multiprocessing.cpu_count()
+
+# Get the path to the top level of the repo
+with open(".PWD") as f:
+  repo_path = f.readline().strip()
+  
 start_time = time.time()
 
 # Function to create zipped lists of latitude, longitude, and line content for each line in the input file
@@ -72,13 +78,6 @@ def convert_data(line_ntuple):
   timestamp = int(time_utc.timestamp())
   return (lat, lon, year, timestamp, GHI)
 
-# Function to convert a string of coordinates into the hdfs filename containing irradiance data for the given set of coordinates
-def make_filename(coord_string):
-  coord_list = coord_string.split(",")
-  lat = coord_list[0]
-  long = coord_list[1]
-  return "/user/ubuntu/IrradianceData_isInBC/%s_%s.csv"%(lat, long)
-
 def reformat_load_data(line_content):
   content_list = line_content.split(",")
   date_list = content_list[0].split("/")
@@ -96,19 +95,19 @@ def reformat_load_data(line_content):
   load = int(content_list[2])    # Load, in MWh
   return (year, timestamp, load)
 
-# Get the number of CPUs on the given machine
-N_CORES = multiprocessing.cpu_count()
-
-# Get the path to the top level of the repo
-with open(".PWD") as f:
-  repo_path = f.readline().strip()
-
 # Collect the load data for the years of interest
 load_RDD = sc.textFile("file://%s/Tables/LoadData/BalancingAuthorityLoad*.csv"%repo_path).filter(lambda x: x[0]!="#").map(reformat_load_data).repartition(2*N_CORES)
 
 # Convert to a dataframe
 load_DF = load_RDD.toDF(["Year", "Load_Timestamp", "Load"])
 load_DF.show(n=5)
+
+# Function to convert a string of coordinates into the hdfs filename containing irradiance data for the given set of coordinates
+def make_filename(coord_string):
+  coord_list = coord_string.split(",")
+  lat = coord_list[0]
+  long = coord_list[1]
+  return "/user/ubuntu/IrradianceData_isInBC/%s_%s.csv"%(lat, long)
 
 # Collect the irradiance data for the selected coordinates
 filenames = sc.textFile('/user/ubuntu/IrradianceMap/SampledCoords_df').map(make_filename).collect()
@@ -118,9 +117,11 @@ irr_RDD = sc.wholeTextFiles(','.join(filenames)).flatMap(make_data).repartition(
 irr_DF = irr_RDD.toDF(["Lat", "Long", "Year", "Irr_Timestamp", "GHI"]).groupBy("Year", "Irr_Timestamp").sum("GHI").withColumnRenamed("sum(GHI)", "GHI_Sum")
 irr_DF.show(n=5)
 
-# Join the dataframes so the timestamps are matching
+# Join the dataframes so the timestamps are matching. 
 power_DF = irr_DF.join(load_DF.drop("Year"), load_DF.Load_Timestamp==irr_DF.Irr_Timestamp).drop("Load_Timestamp").withColumnRenamed("Irr_Timestamp", "Timestamp").repartition(2*N_CORES).cache()
-power_DF = power_DF.sort("Timestamp")
+
+# Filter out any rows with 0 load 
+power_DF = power_DF.filter(power_DF.Load > 0)
 power_DF.show(n=24)
 
 # Find the cumulative sum of the load and GHI columns
@@ -138,8 +139,8 @@ maxLoad = lastRow[5]
 powerRatio = maxLoad/maxGHI
 #print(maxGHI, maxLoad)
 
-# Filter out any non-physical points with 0 load
-power_RDD = power_DF.filter(power_DF.Load > 0).rdd.map(tuple).map(lambda x: (x[0], x[1], x[2], x[2]*powerRatio, x[3], x[4], x[4]*powerRatio, x[5])).repartition(2*N_CORES).cache()
+# Multiply the GHI columns by the scaling factor, and compute the difference between the scaled cumulative GHI and the cumulative load
+power_RDD = power_DF.rdd.map(tuple).map(lambda x: (x[0], x[1], x[2], x[2]*powerRatio, x[3], x[4], x[4]*powerRatio, x[5])).repartition(2*N_CORES).cache()
 power_RDD = power_RDD.map(lambda x: (x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[6]-x[7]))
 #max_energy_list = power_RDD.max(lambda x: abs(x[6]))
 #print(max_energy_list)
@@ -151,7 +152,8 @@ try:
   print("Removed HDFS directory /user/ubuntu/SolarAnalysis/PowerCumSum")
 except IOError:
   print("HDFS directory /user/ubuntu/SolarAnalysis/PowerCumSum not present - no need to delete. (Or some other nefarious IO error...)")
-  
-power_RDD.map(lambda x: ','.join(str(d) for d in x)).saveAsTextFile('/user/ubuntu/SolarAnalysis/PowerCumSum')
 
+# Save the RDD to text files
+power_RDD.map(lambda x: ','.join(str(d) for d in x)).saveAsTextFile('/user/ubuntu/SolarAnalysis/PowerCumSum')
+ 
 print("Elapsed Time: %ds"%(time.time()-start_time))
