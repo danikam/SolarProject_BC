@@ -5,7 +5,7 @@ authors:
   given-names: "Danika"
   orcid: "https://orcid.org/0000-0001-5533-6300"
 title: "SolarProject_BC"
-version: 0.1.0
+version: v0.1.0
 doi: 10.5281/zenodo.1234
 date-released: 2024-08-03
 url: "https://github.com/danikam/SolarProject_BC"
